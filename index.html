@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tesoreros SG - Editable</title>
+    <style>
+      :root {
+        --blue: #0f2a44;
+        --light-blue: #143d63;
+        --accent: #f5c542;
+        --bg: #f4f7fb;
+        --card: #ffffff;
+        --muted: #6f7f92;
+        --success: #2f9e44;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: var(--bg);
+        color: #17212b;
+      }
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 1rem;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 14px;
+        box-shadow: 0 8px 22px rgba(10, 28, 47, 0.1);
+      }
+      .login {
+        max-width: 430px;
+        margin: 4rem auto;
+        padding: 2rem;
+      }
+      h1 { margin: 0; font-size: 1.8rem; }
+      .subtitle { margin: .5rem 0 1.2rem; color: var(--muted); }
+      .field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1rem; }
+      label { font-weight: 600; font-size: .92rem; }
+      input, textarea {
+        width: 100%;
+        padding: .68rem .75rem;
+        border: 1px solid #d0dae6;
+        border-radius: 10px;
+        font: inherit;
+      }
+      textarea { min-height: 66px; resize: vertical; }
+      button {
+        border: 0;
+        background: var(--blue);
+        color: #fff;
+        padding: .7rem .95rem;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button.secondary { background: var(--light-blue); }
+      .row { display: flex; gap: .6rem; flex-wrap: wrap; }
+      .topbar {
+        background: linear-gradient(120deg, var(--blue), var(--light-blue));
+        color: #fff;
+        padding: 1.2rem;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .8rem;
+      }
+      .badge { background: rgba(255,255,255,.18); padding: .3rem .6rem; border-radius: 999px; font-size: .88rem; }
+      .tabs {
+        display: flex;
+        overflow-x: auto;
+        gap: .5rem;
+        margin: .9rem 0;
+      }
+      .tab {
+        background: #dfe8f3;
+        color: #1f3041;
+        border-radius: 999px;
+        padding: .5rem .85rem;
+        white-space: nowrap;
+        font-size: .92rem;
+      }
+      .grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 1rem; }
+      .panel { padding: 1rem; }
+      .panel h2 { margin: 0 0 .8rem; font-size: 1.1rem; }
+      .metric {
+        padding: .8rem;
+        border: 1px solid #dde7f3;
+        border-radius: 10px;
+        margin-bottom: .6rem;
+      }
+      .metric small { color: var(--muted); }
+      .metric strong { display: block; font-size: 1.2rem; margin-top: .18rem; }
+      .hint { color: var(--muted); font-size: .9rem; }
+      .hidden { display: none !important; }
+      .ok { color: var(--success); font-weight: 700; }
+      @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section id="login" class="card login">
+        <h1 id="login-title">Tesoreros SG</h1>
+        <p id="login-school" class="subtitle">Saint George's College</p>
+        <div class="field">
+          <label for="pin">PIN</label>
+          <input id="pin" type="password" placeholder="Ingresa el PIN" />
+        </div>
+        <p id="pin-error" class="hint hidden" style="color:#c92a2a">PIN incorrecto</p>
+        <button id="login-btn">Ingresar</button>
+      </section>
+
+      <section id="dashboard" class="hidden">
+        <header class="topbar card">
+          <div>
+            <h1 id="app-title">Tesoreros SG</h1>
+            <p class="subtitle" style="margin: .2rem 0 0; color:#e3edf8">
+              <span id="app-school">Saint George's College</span> · Curso <span id="curso">4B</span>
+            </p>
+          </div>
+          <div class="row">
+            <span class="badge">Delegados Público</span>
+            <button id="logout-btn" class="secondary">Cerrar sesión</button>
+          </div>
+        </header>
+
+        <nav class="tabs" aria-label="Secciones">
+          <span class="tab">Resumen</span>
+          <span class="tab">Cuotas</span>
+          <span class="tab">Pagos</span>
+          <span class="tab">Gastos</span>
+          <span class="tab">Alumnos</span>
+          <span class="tab">⚠️ Pendientes</span>
+          <span class="tab">Reportes</span>
+          <span class="tab">Log</span>
+        </nav>
+
+        <div class="grid">
+          <section class="card panel">
+            <h2>Resumen</h2>
+            <p class="hint">Vista general del fondo</p>
+            <div class="metric"><small>Saldo actual</small><strong id="saldo">$ 0</strong></div>
+            <div class="metric"><small>Total recaudado</small><strong id="recaudado">$ 0</strong></div>
+            <div class="metric"><small>Total gastado</small><strong id="gastado">$ 0</strong></div>
+          </section>
+
+          <aside class="card panel">
+            <h2>Campos editables</h2>
+            <form id="settings-form">
+              <div class="field">
+                <label for="title">Título de la app</label>
+                <input id="title" />
+              </div>
+              <div class="field">
+                <label for="school">Colegio</label>
+                <input id="school" />
+              </div>
+              <div class="field">
+                <label for="delegates">Texto delegados</label>
+                <input id="delegates" />
+              </div>
+              <div class="field">
+                <label for="curso-input">Curso</label>
+                <input id="curso-input" />
+              </div>
+              <div class="field">
+                <label for="saldo-input">Saldo actual</label>
+                <input id="saldo-input" type="number" />
+              </div>
+              <div class="field">
+                <label for="recaudado-input">Total recaudado</label>
+                <input id="recaudado-input" type="number" />
+              </div>
+              <div class="field">
+                <label for="gastado-input">Total gastado</label>
+                <input id="gastado-input" type="number" />
+              </div>
+              <div class="row">
+                <button type="submit">Guardar cambios</button>
+                <button id="reset-btn" type="button" class="secondary">Restaurar datos</button>
+              </div>
+            </form>
+            <p id="saved" class="hint hidden ok">Cambios guardados ✅</p>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const defaultConfig = {
+        pin: "1234",
+        title: "Tesoreros SG",
+        school: "Saint George's College",
+        delegates: "Delegados Público",
+        curso: "4B",
+        saldo: 0,
+        recaudado: 0,
+        gastado: 0
+      };
+
+      const params = new URLSearchParams(window.location.search);
+      const stored = JSON.parse(localStorage.getItem("tesoreros-config") || "null");
+      const config = { ...defaultConfig, ...stored };
+      if (params.get("curso")) config.curso = params.get("curso").toUpperCase();
+
+      const login = document.getElementById("login");
+      const dashboard = document.getElementById("dashboard");
+      const pinError = document.getElementById("pin-error");
+      const delegatesBadge = document.querySelector('.badge');
+
+      function currency(value) {
+        return "$ " + Number(value || 0).toLocaleString("es-CL");
+      }
+
+      function render() {
+        document.getElementById("login-title").textContent = config.title;
+        document.getElementById("login-school").textContent = config.school;
+        document.getElementById("app-title").textContent = config.title;
+        document.getElementById("app-school").textContent = config.school;
+        document.getElementById("curso").textContent = config.curso;
+        delegatesBadge.textContent = config.delegates;
+        document.getElementById("saldo").textContent = currency(config.saldo);
+        document.getElementById("recaudado").textContent = currency(config.recaudado);
+        document.getElementById("gastado").textContent = currency(config.gastado);
+
+        document.getElementById("title").value = config.title;
+        document.getElementById("school").value = config.school;
+        document.getElementById("delegates").value = config.delegates;
+        document.getElementById("curso-input").value = config.curso;
+        document.getElementById("saldo-input").value = config.saldo;
+        document.getElementById("recaudado-input").value = config.recaudado;
+        document.getElementById("gastado-input").value = config.gastado;
+      }
+
+      render();
+
+      document.getElementById("login-btn").addEventListener("click", () => {
+        if (document.getElementById("pin").value === config.pin) {
+          login.classList.add("hidden");
+          dashboard.classList.remove("hidden");
+          pinError.classList.add("hidden");
+        } else {
+          pinError.classList.remove("hidden");
+        }
+      });
+
+      document.getElementById("logout-btn").addEventListener("click", () => {
+        document.getElementById("pin").value = "";
+        dashboard.classList.add("hidden");
+        login.classList.remove("hidden");
+      });
+
+      document.getElementById("settings-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        config.title = document.getElementById("title").value.trim() || defaultConfig.title;
+        config.school = document.getElementById("school").value.trim() || defaultConfig.school;
+        config.delegates = document.getElementById("delegates").value.trim() || defaultConfig.delegates;
+        config.curso = (document.getElementById("curso-input").value.trim() || defaultConfig.curso).toUpperCase();
+        config.saldo = Number(document.getElementById("saldo-input").value || 0);
+        config.recaudado = Number(document.getElementById("recaudado-input").value || 0);
+        config.gastado = Number(document.getElementById("gastado-input").value || 0);
+
+        localStorage.setItem("tesoreros-config", JSON.stringify(config));
+        render();
+
+        const saved = document.getElementById("saved");
+        saved.classList.remove("hidden");
+        setTimeout(() => saved.classList.add("hidden"), 1400);
+      });
+
+      document.getElementById("reset-btn").addEventListener("click", () => {
+        localStorage.removeItem("tesoreros-config");
+        Object.assign(config, defaultConfig);
+        if (params.get("curso")) config.curso = params.get("curso").toUpperCase();
+        render();
+      });
+    </script>
+  </body>
+</html>
