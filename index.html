@@ -3,7 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tesoreros SG - Editable</title>
+    <!-- Sin conexiones de red ni formularios externos: aunque hubiera una inyección, los datos no pueden salir de la página. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0f2a44" />
+    <title>Tesoreros SG</title>
     <style>
       :root {
         --blue: #0f2a44;
@@ -11,8 +16,11 @@
         --accent: #f5c542;
         --bg: #f4f7fb;
         --card: #ffffff;
-        --muted: #6f7f92;
-        --success: #2f9e44;
+        --muted: #5b6b7e;
+        --line: #dde7f3;
+        --success: #2b8a3e;
+        --danger: #c92a2a;
+        --warn: #b8770b;
       }
       * { box-sizing: border-box; }
       body {
@@ -21,263 +29,894 @@
         background: var(--bg);
         color: #17212b;
       }
-      .wrap {
-        max-width: 1080px;
-        margin: 0 auto;
-        padding: 1rem;
-      }
-      .card {
-        background: var(--card);
-        border-radius: 14px;
-        box-shadow: 0 8px 22px rgba(10, 28, 47, 0.1);
-      }
-      .login {
-        max-width: 430px;
-        margin: 4rem auto;
-        padding: 2rem;
-      }
-      h1 { margin: 0; font-size: 1.8rem; }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 1rem; }
+      .card { background: var(--card); border-radius: 14px; box-shadow: 0 8px 22px rgba(10, 28, 47, 0.1); }
+      .login { max-width: 430px; margin: 3rem auto; padding: 2rem; }
+      h1 { margin: 0; font-size: 1.7rem; }
+      h2 { margin: 0 0 .8rem; font-size: 1.1rem; }
+      h3 { margin: 1rem 0 .5rem; font-size: 1rem; }
       .subtitle { margin: .5rem 0 1.2rem; color: var(--muted); }
       .field { display: flex; flex-direction: column; gap: .35rem; margin-bottom: 1rem; }
       label { font-weight: 600; font-size: .92rem; }
-      input, textarea {
+      input, textarea, select {
         width: 100%;
-        padding: .68rem .75rem;
-        border: 1px solid #d0dae6;
+        min-height: 44px;
+        padding: .6rem .75rem;
+        border: 1px solid #b9c7d8;
         border-radius: 10px;
         font: inherit;
+        background: #fff;
       }
-      textarea { min-height: 66px; resize: vertical; }
+      textarea { min-height: 90px; resize: vertical; }
+      :focus-visible { outline: 3px solid #4c9aff; outline-offset: 2px; }
       button {
         border: 0;
         background: var(--blue);
         color: #fff;
-        padding: .7rem .95rem;
+        min-height: 44px;
+        padding: .6rem .95rem;
         border-radius: 10px;
+        font: inherit;
         font-weight: 700;
         cursor: pointer;
       }
+      button:disabled { opacity: .5; cursor: not-allowed; }
       button.secondary { background: var(--light-blue); }
-      .row { display: flex; gap: .6rem; flex-wrap: wrap; }
+      button.ghost { background: #e6edf6; color: #1f3041; }
+      button.danger { background: var(--danger); }
+      button.small { min-height: 34px; padding: .3rem .6rem; font-size: .85rem; }
+      .row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+      .row.end { justify-content: flex-end; }
+      .row.between { justify-content: space-between; }
       .topbar {
         background: linear-gradient(120deg, var(--blue), var(--light-blue));
         color: #fff;
-        padding: 1.2rem;
-        border-radius: 14px;
+        padding: 1.1rem 1.2rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: .8rem;
+        flex-wrap: wrap;
       }
+      .topbar .subtitle { margin: .2rem 0 0; color: #e3edf8; }
       .badge { background: rgba(255,255,255,.18); padding: .3rem .6rem; border-radius: 999px; font-size: .88rem; }
-      .tabs {
-        display: flex;
-        overflow-x: auto;
-        gap: .5rem;
-        margin: .9rem 0;
-      }
+      .tabs { display: flex; overflow-x: auto; gap: .5rem; margin: .9rem 0; padding-bottom: .2rem; }
       .tab {
         background: #dfe8f3;
         color: #1f3041;
         border-radius: 999px;
-        padding: .5rem .85rem;
+        padding: .5rem .95rem;
         white-space: nowrap;
         font-size: .92rem;
       }
-      .grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 1rem; }
-      .panel { padding: 1rem; }
-      .panel h2 { margin: 0 0 .8rem; font-size: 1.1rem; }
-      .metric {
-        padding: .8rem;
-        border: 1px solid #dde7f3;
-        border-radius: 10px;
-        margin-bottom: .6rem;
-      }
+      .tab[aria-selected="true"] { background: var(--blue); color: #fff; }
+      .tab .count { background: var(--danger); color: #fff; border-radius: 999px; padding: 0 .4rem; margin-left: .3rem; font-size: .75rem; }
+      .panel { padding: 1rem; margin-bottom: 1rem; }
+      .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .7rem; margin-bottom: 1rem; }
+      .metric { padding: .8rem; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
       .metric small { color: var(--muted); }
-      .metric strong { display: block; font-size: 1.2rem; margin-top: .18rem; }
-      .hint { color: var(--muted); font-size: .9rem; }
+      .metric strong { display: block; font-size: 1.3rem; margin-top: .18rem; }
+      .metric.neg strong { color: var(--danger); }
+      .hint { color: var(--muted); font-size: .9rem; margin: .2rem 0 .8rem; }
       .hidden { display: none !important; }
       .ok { color: var(--success); font-weight: 700; }
-      @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+      .err { color: var(--danger); font-weight: 600; margin: 0 0 .8rem; }
+      .progress { height: 12px; background: #e6edf6; border-radius: 999px; overflow: hidden; }
+      .progress > div { height: 100%; background: var(--success); }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: .93rem; }
+      th, td { text-align: left; padding: .55rem .5rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+      th { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+      td.num, th.num { text-align: right; white-space: nowrap; }
+      td.actions { white-space: nowrap; text-align: right; }
+      tfoot td { font-weight: 700; }
+      .pill { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .8rem; font-weight: 700; }
+      .pill.good { background: #d3f9d8; color: #1e6b2c; }
+      .pill.bad { background: #ffe3e3; color: #a51111; }
+      .pill.warn { background: #fff3bf; color: #7a5200; }
+      .empty { text-align: center; color: var(--muted); padding: 1.5rem .5rem; }
+      dialog { border: 0; border-radius: 14px; padding: 0; width: min(480px, 94vw); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+      dialog::backdrop { background: rgba(10, 28, 47, .55); }
+      .modal { padding: 1.3rem; }
+      #toast {
+        position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%);
+        background: #17212b; color: #fff; padding: .7rem 1.1rem; border-radius: 10px;
+        max-width: 92vw; z-index: 10; font-weight: 600;
+      }
+      .pin-wrap { position: relative; }
+      .pin-wrap button { position: absolute; right: 4px; top: 4px; min-height: 36px; background: transparent; color: var(--muted); font-weight: 600; }
+      .filters { display: grid; grid-template-columns: 1fr auto; gap: .6rem; margin-bottom: .8rem; }
+      .filters.three { grid-template-columns: 1fr 1fr auto; }
+      @media (max-width: 640px) { .filters, .filters.three { grid-template-columns: 1fr; } }
+      @media print {
+        body { background: #fff; }
+        .tabs, .topbar button, button, .filters, .no-print { display: none !important; }
+        .card { box-shadow: none; }
+      }
+      @media (prefers-reduced-motion: no-preference) { .progress > div { transition: width .4s; } }
     </style>
   </head>
   <body>
     <main class="wrap">
-      <section id="login" class="card login">
-        <h1 id="login-title">Tesoreros SG</h1>
-        <p id="login-school" class="subtitle">Saint George's College</p>
-        <div class="field">
-          <label for="pin">PIN</label>
-          <input id="pin" type="password" placeholder="Ingresa el PIN" />
-        </div>
-        <p id="pin-error" class="hint hidden" style="color:#c92a2a">PIN incorrecto</p>
-        <button id="login-btn">Ingresar</button>
+      <noscript><p class="card panel">Esta aplicación necesita JavaScript.</p></noscript>
+
+      <!-- Primera vez: crear PIN -->
+      <section id="setup" class="card login hidden">
+        <h1>Bienvenido/a</h1>
+        <p class="subtitle">Crea un PIN para proteger los datos de este dispositivo. No hay PIN por defecto.</p>
+        <form id="setup-form" autocomplete="off" novalidate>
+          <div class="field">
+            <label for="setup-pin">Nuevo PIN (mínimo 6 caracteres)</label>
+            <input id="setup-pin" type="password" maxlength="64" autocomplete="new-password" />
+          </div>
+          <div class="field">
+            <label for="setup-pin2">Repite el PIN</label>
+            <input id="setup-pin2" type="password" maxlength="64" autocomplete="new-password" />
+          </div>
+          <p id="setup-error" class="err hidden" role="alert"></p>
+          <button type="submit">Crear PIN y entrar</button>
+        </form>
       </section>
 
+      <!-- Login -->
+      <section id="login" class="card login hidden">
+        <h1 id="login-title">Tesoreros SG</h1>
+        <p id="login-school" class="subtitle"></p>
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="pin">PIN</label>
+            <div class="pin-wrap">
+              <input id="pin" type="password" maxlength="64" placeholder="Ingresa el PIN" autocomplete="current-password" />
+              <button type="button" id="pin-toggle" aria-label="Mostrar u ocultar PIN">Ver</button>
+            </div>
+          </div>
+          <p id="pin-error" class="err hidden" role="alert"></p>
+          <button id="login-btn" type="submit">Ingresar</button>
+        </form>
+      </section>
+
+      <!-- App -->
       <section id="dashboard" class="hidden">
         <header class="topbar card">
           <div>
-            <h1 id="app-title">Tesoreros SG</h1>
-            <p class="subtitle" style="margin: .2rem 0 0; color:#e3edf8">
-              <span id="app-school">Saint George's College</span> · Curso <span id="curso">4B</span>
-            </p>
+            <h1 id="app-title"></h1>
+            <p class="subtitle"><span id="app-school"></span> · Curso <span id="curso"></span></p>
           </div>
           <div class="row">
-            <span class="badge">Delegados Público</span>
-            <button id="logout-btn" class="secondary">Cerrar sesión</button>
+            <span class="badge" id="delegates-badge"></span>
+            <button id="logout-btn" class="secondary" type="button">Cerrar sesión</button>
           </div>
         </header>
-
-        <nav class="tabs" aria-label="Secciones">
-          <span class="tab">Resumen</span>
-          <span class="tab">Cuotas</span>
-          <span class="tab">Pagos</span>
-          <span class="tab">Gastos</span>
-          <span class="tab">Alumnos</span>
-          <span class="tab">⚠️ Pendientes</span>
-          <span class="tab">Reportes</span>
-          <span class="tab">Log</span>
-        </nav>
-
-        <div class="grid">
-          <section class="card panel">
-            <h2>Resumen</h2>
-            <p class="hint">Vista general del fondo</p>
-            <div class="metric"><small>Saldo actual</small><strong id="saldo">$ 0</strong></div>
-            <div class="metric"><small>Total recaudado</small><strong id="recaudado">$ 0</strong></div>
-            <div class="metric"><small>Total gastado</small><strong id="gastado">$ 0</strong></div>
-          </section>
-
-          <aside class="card panel">
-            <h2>Campos editables</h2>
-            <form id="settings-form">
-              <div class="field">
-                <label for="title">Título de la app</label>
-                <input id="title" />
-              </div>
-              <div class="field">
-                <label for="school">Colegio</label>
-                <input id="school" />
-              </div>
-              <div class="field">
-                <label for="delegates">Texto delegados</label>
-                <input id="delegates" />
-              </div>
-              <div class="field">
-                <label for="curso-input">Curso</label>
-                <input id="curso-input" />
-              </div>
-              <div class="field">
-                <label for="saldo-input">Saldo actual</label>
-                <input id="saldo-input" type="number" />
-              </div>
-              <div class="field">
-                <label for="recaudado-input">Total recaudado</label>
-                <input id="recaudado-input" type="number" />
-              </div>
-              <div class="field">
-                <label for="gastado-input">Total gastado</label>
-                <input id="gastado-input" type="number" />
-              </div>
-              <div class="row">
-                <button type="submit">Guardar cambios</button>
-                <button id="reset-btn" type="button" class="secondary">Restaurar datos</button>
-              </div>
-            </form>
-            <p id="saved" class="hint hidden ok">Cambios guardados ✅</p>
-          </aside>
-        </div>
+        <nav class="tabs" role="tablist" aria-label="Secciones" id="tabs"></nav>
+        <div id="view" role="tabpanel" tabindex="-1"></div>
       </section>
     </main>
+    <div id="toast" class="hidden" role="status" aria-live="polite"></div>
 
     <script>
-      const defaultConfig = {
-        pin: "1234",
-        title: "Tesoreros SG",
-        school: "Saint George's College",
-        delegates: "Delegados Público",
-        curso: "4B",
-        saldo: 0,
-        recaudado: 0,
-        gastado: 0
+      "use strict";
+
+      /* ---------- Utilidades ---------- */
+      const $ = (sel, root = document) => root.querySelector(sel);
+      const KEY = "tesoreros-data-v2";
+      const OLD_KEY = "tesoreros-config";
+      const LOCK_KEY = "tesoreros-lock";
+      const IDLE_MS = 10 * 60 * 1000;
+      const PBKDF2_ITER = 210000;
+      const MAX_MONEY = 1e9;
+      const CATEGORIAS = ["Actividad", "Regalo", "Material", "Alimentos", "Transporte", "Otro"];
+      const METODOS = ["Efectivo", "Transferencia", "Otro"];
+
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      const clp = (n) => "$ " + Number(n || 0).toLocaleString("es-CL");
+      const pad = (n) => String(n).padStart(2, "0");
+      const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+      const fmtDate = (iso) => (iso ? iso.split("-").reverse().join("-") : "—");
+      const uid = () => {
+        const a = new Uint8Array(12);
+        crypto.getRandomValues(a);
+        return Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("");
+      };
+      const str = (v, max = 100) => String(v ?? "").replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max);
+      const int = (v, max = MAX_MONEY) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(Math.max(n, -max), max) : 0; };
+      const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(Date.parse(v));
+      const b64e = (u8) => btoa(String.fromCharCode(...u8));
+      const b64d = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+      let toastTimer;
+      function toast(msg) {
+        const t = $("#toast");
+        t.textContent = msg;
+        t.classList.remove("hidden");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.add("hidden"), 3200);
+      }
+
+      /* ---------- Datos ---------- */
+      const defaults = () => ({
+        v: 2,
+        settings: { title: "Tesoreros SG", school: "Saint George's College", delegates: "Delegados Público", curso: "4B", saldoInicial: 0 },
+        auth: null,
+        cuotas: [], alumnos: [], pagos: [], gastos: [], log: []
+      });
+
+      // Valida y limpia cualquier dato que venga del almacenamiento o de un archivo importado.
+      function sanitize(raw, currentAuth) {
+        const d = defaults();
+        if (!raw || typeof raw !== "object") return d;
+        const s = raw.settings || {};
+        d.settings.title = str(s.title, 60) || d.settings.title;
+        d.settings.school = str(s.school, 80) || d.settings.school;
+        d.settings.delegates = str(s.delegates, 60) || d.settings.delegates;
+        d.settings.curso = (str(s.curso, 20) || d.settings.curso).toUpperCase();
+        d.settings.saldoInicial = int(s.saldoInicial);
+        const a = currentAuth !== undefined ? currentAuth : raw.auth;
+        if (a && typeof a.salt === "string" && typeof a.hash === "string" && Number.isInteger(a.iter)) {
+          d.auth = { salt: a.salt.slice(0, 64), hash: a.hash.slice(0, 96), iter: a.iter };
+        }
+        const seen = new Set();
+        const uniq = (id) => { const v = /^[\w-]{1,40}$/.test(String(id)) && !seen.has(String(id)) ? String(id) : uid(); seen.add(v); return v; };
+        const list = (x, max = 5000) => (Array.isArray(x) ? x.slice(0, max) : []);
+        d.alumnos = list(raw.alumnos).map((x) => ({ id: uniq(x?.id), nombre: str(x?.nombre, 80) })).filter((x) => x.nombre);
+        d.cuotas = list(raw.cuotas, 500).map((x) => ({
+          id: uniq(x?.id), nombre: str(x?.nombre, 80), monto: Math.max(int(x?.monto), 0),
+          vencimiento: isDate(x?.vencimiento) ? x.vencimiento : ""
+        })).filter((x) => x.nombre);
+        const al = new Set(d.alumnos.map((x) => x.id));
+        const cu = new Set(d.cuotas.map((x) => x.id));
+        d.pagos = list(raw.pagos, 50000).map((x) => ({
+          id: uniq(x?.id), alumnoId: String(x?.alumnoId), cuotaId: String(x?.cuotaId), monto: Math.max(int(x?.monto), 0),
+          fecha: isDate(x?.fecha) ? x.fecha : today(),
+          metodo: METODOS.includes(x?.metodo) ? x.metodo : "Otro", nota: str(x?.nota, 200)
+        })).filter((x) => al.has(x.alumnoId) && cu.has(x.cuotaId) && x.monto > 0);
+        d.gastos = list(raw.gastos, 20000).map((x) => ({
+          id: uniq(x?.id), fecha: isDate(x?.fecha) ? x.fecha : today(), descripcion: str(x?.descripcion, 120),
+          categoria: CATEGORIAS.includes(x?.categoria) ? x.categoria : "Otro", monto: Math.max(int(x?.monto), 0)
+        })).filter((x) => x.descripcion && x.monto > 0);
+        d.log = list(raw.log, 500).map((x) => ({ ts: str(x?.ts, 30), msg: str(x?.msg, 200) })).filter((x) => x.msg);
+        return d;
+      }
+
+      function load() {
+        try {
+          const raw = localStorage.getItem(KEY);
+          if (raw) return sanitize(JSON.parse(raw));
+          const old = localStorage.getItem(OLD_KEY); // migración desde la versión anterior (no se reutiliza el PIN en texto plano)
+          if (old) {
+            const o = JSON.parse(old);
+            const d = sanitize({ settings: { title: o.title, school: o.school, delegates: o.delegates, curso: o.curso, saldoInicial: int(o.saldo) - int(o.recaudado) + int(o.gastado) } });
+            localStorage.removeItem(OLD_KEY);
+            return d;
+          }
+        } catch (e) { /* datos corruptos o almacenamiento bloqueado: se parte de cero */ }
+        return defaults();
+      }
+
+      let S = load();
+      const qCurso = new URLSearchParams(location.search).get("curso");
+      if (qCurso && !localStorage.getItem(KEY)) S.settings.curso = str(qCurso, 20).toUpperCase() || S.settings.curso;
+
+      function save() {
+        try { localStorage.setItem(KEY, JSON.stringify(S)); return true; }
+        catch (e) { toast("⚠️ No se pudo guardar (almacenamiento lleno o bloqueado). Descarga un respaldo."); return false; }
+      }
+      function logAction(msg) {
+        S.log.unshift({ ts: new Date().toISOString().slice(0, 19).replace("T", " "), msg: str(msg, 200) });
+        S.log = S.log.slice(0, 500);
+      }
+      function commit(msg) { if (msg) logAction(msg); save(); render(); }
+
+      /* ---------- Cálculos ---------- */
+      const alumnoName = (id) => S.alumnos.find((a) => a.id === id)?.nombre ?? "(eliminado)";
+      const cuotaOf = (id) => S.cuotas.find((c) => c.id === id);
+      const paid = (alumnoId, cuotaId) => S.pagos.reduce((t, p) => t + (p.alumnoId === alumnoId && p.cuotaId === cuotaId ? p.monto : 0), 0);
+      const recaudado = () => S.pagos.reduce((t, p) => t + p.monto, 0);
+      const gastado = () => S.gastos.reduce((t, g) => t + g.monto, 0);
+      const saldo = () => S.settings.saldoInicial + recaudado() - gastado();
+      const esperado = () => S.cuotas.reduce((t, c) => t + c.monto * S.alumnos.length, 0);
+      function pendientes() {
+        const out = [];
+        for (const c of S.cuotas) for (const a of S.alumnos) {
+          const rest = c.monto - paid(a.id, c.id);
+          if (rest > 0) out.push({ alumnoId: a.id, alumno: a.nombre, cuotaId: c.id, cuota: c.nombre, vencimiento: c.vencimiento, monto: rest, atrasada: !!c.vencimiento && c.vencimiento < today() });
+        }
+        return out.sort((x, y) => Number(y.atrasada) - Number(x.atrasada) || x.alumno.localeCompare(y.alumno, "es"));
+      }
+      const alumnoStats = (a) => {
+        const total = S.cuotas.reduce((t, c) => t + c.monto, 0);
+        const pagado = S.cuotas.reduce((t, c) => t + Math.min(paid(a.id, c.id), c.monto), 0);
+        return { total, pagado, pendiente: total - pagado };
       };
 
-      const params = new URLSearchParams(window.location.search);
-      const stored = JSON.parse(localStorage.getItem("tesoreros-config") || "null");
-      const config = { ...defaultConfig, ...stored };
-      if (params.get("curso")) config.curso = params.get("curso").toUpperCase();
-
-      const login = document.getElementById("login");
-      const dashboard = document.getElementById("dashboard");
-      const pinError = document.getElementById("pin-error");
-      const delegatesBadge = document.querySelector('.badge');
-
-      function currency(value) {
-        return "$ " + Number(value || 0).toLocaleString("es-CL");
+      /* ---------- Seguridad: PIN ---------- */
+      async function hashPin(pin, saltB64, iter) {
+        const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(pin), "PBKDF2", false, ["deriveBits"]);
+        const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: b64d(saltB64), iterations: iter }, key, 256);
+        return b64e(new Uint8Array(bits));
+      }
+      const sameStr = (a, b) => { if (a.length !== b.length) return false; let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i); return r === 0; };
+      async function makeAuth(pin) {
+        const salt = b64e(crypto.getRandomValues(new Uint8Array(16)));
+        return { salt, iter: PBKDF2_ITER, hash: await hashPin(pin, salt, PBKDF2_ITER) };
+      }
+      function pinPolicy(pin) {
+        if (pin.length < 6) return "El PIN debe tener al menos 6 caracteres.";
+        if (/^(.)\1+$/.test(pin)) return "El PIN no puede ser un solo carácter repetido.";
+        if (["123456", "1234567", "12345678", "654321", "abcdef", "qwerty", "password", "000000"].includes(pin.toLowerCase())) return "Ese PIN es demasiado común.";
+        return "";
+      }
+      // Bloqueo progresivo tras intentos fallidos (protege contra adivinar el PIN desde la propia pantalla).
+      function lockState() {
+        try { const l = JSON.parse(localStorage.getItem(LOCK_KEY) || "{}"); return { fails: int(l.fails, 1e6), until: int(l.until, 1e13) }; }
+        catch (e) { return { fails: 0, until: 0 }; }
+      }
+      function setLock(l) { try { localStorage.setItem(LOCK_KEY, JSON.stringify(l)); } catch (e) { /* ignorar */ } }
+      const lockRemaining = () => Math.max(0, Math.ceil((lockState().until - Date.now()) / 1000));
+      async function checkPin(pin) {
+        const wait = lockRemaining();
+        if (wait > 0) return { ok: false, wait };
+        if (!S.auth) return { ok: false, wait: 0 };
+        const h = await hashPin(pin, S.auth.salt, S.auth.iter);
+        if (sameStr(h, S.auth.hash)) { setLock({ fails: 0, until: 0 }); return { ok: true }; }
+        const fails = lockState().fails + 1;
+        const until = fails >= 5 ? Date.now() + Math.min(30 * 2 ** (fails - 5), 900) * 1000 : 0;
+        setLock({ fails, until });
+        return { ok: false, wait: lockRemaining() };
       }
 
-      function render() {
-        document.getElementById("login-title").textContent = config.title;
-        document.getElementById("login-school").textContent = config.school;
-        document.getElementById("app-title").textContent = config.title;
-        document.getElementById("app-school").textContent = config.school;
-        document.getElementById("curso").textContent = config.curso;
-        delegatesBadge.textContent = config.delegates;
-        document.getElementById("saldo").textContent = currency(config.saldo);
-        document.getElementById("recaudado").textContent = currency(config.recaudado);
-        document.getElementById("gastado").textContent = currency(config.gastado);
-
-        document.getElementById("title").value = config.title;
-        document.getElementById("school").value = config.school;
-        document.getElementById("delegates").value = config.delegates;
-        document.getElementById("curso-input").value = config.curso;
-        document.getElementById("saldo-input").value = config.saldo;
-        document.getElementById("recaudado-input").value = config.recaudado;
-        document.getElementById("gastado-input").value = config.gastado;
+      /* ---------- Diálogos ---------- */
+      function openDialog(html) {
+        const dlg = document.createElement("dialog");
+        dlg.innerHTML = html;
+        document.body.appendChild(dlg);
+        dlg.addEventListener("close", () => dlg.remove());
+        dlg.showModal();
+        return dlg;
       }
-
-      render();
-
-      document.getElementById("login-btn").addEventListener("click", () => {
-        if (document.getElementById("pin").value === config.pin) {
-          login.classList.add("hidden");
-          dashboard.classList.remove("hidden");
-          pinError.classList.add("hidden");
+      function fieldHtml(f) {
+        const id = "f-" + f.name;
+        const v = f.value ?? "";
+        let input;
+        if (f.type === "select") {
+          input = `<select id="${id}" name="${f.name}">${f.options.map((o) => `<option value="${esc(o.value)}"${String(o.value) === String(v) ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`;
+        } else if (f.type === "textarea") {
+          input = `<textarea id="${id}" name="${f.name}" maxlength="${f.maxlength || 2000}" placeholder="${esc(f.placeholder || "")}">${esc(v)}</textarea>`;
         } else {
-          pinError.classList.remove("hidden");
+          input = `<input id="${id}" name="${f.name}" type="${f.type || "text"}" value="${esc(v)}" maxlength="${f.maxlength || 100}" ${f.min != null ? `min="${f.min}"` : ""} ${f.max != null ? `max="${f.max}"` : ""} ${f.type === "number" ? 'step="1" inputmode="numeric"' : ""} autocomplete="off" />`;
+        }
+        return `<div class="field"><label for="${id}">${esc(f.label)}</label>${input}${f.hint ? `<span class="hint" style="margin:0">${esc(f.hint)}</span>` : ""}</div>`;
+      }
+      // Formulario modal genérico. onSubmit(values) devuelve un texto de error o nada si todo está bien.
+      function openForm({ title, fields, submit = "Guardar", intro = "", onSubmit }) {
+        const dlg = openDialog(`<form class="modal" novalidate autocomplete="off"><h2>${esc(title)}</h2>${intro ? `<p class="hint">${esc(intro)}</p>` : ""}${fields.map(fieldHtml).join("")}<p class="err hidden" role="alert"></p><div class="row end"><button type="button" class="ghost" data-cancel>Cancelar</button><button type="submit">${esc(submit)}</button></div></form>`);
+        const form = $("form", dlg);
+        $("[data-cancel]", dlg).addEventListener("click", () => dlg.close());
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const values = Object.fromEntries(new FormData(form).entries());
+          const btn = $("button[type=submit]", form);
+          btn.disabled = true;
+          let err;
+          try { err = await onSubmit(values); } finally { btn.disabled = false; }
+          if (err) { const p = $(".err", form); p.textContent = err; p.classList.remove("hidden"); }
+          else dlg.close();
+        });
+        form.querySelector("input, select, textarea")?.focus();
+        return dlg;
+      }
+      function confirmBox(message, okLabel = "Confirmar", danger = true) {
+        return new Promise((resolve) => {
+          const dlg = openDialog(`<form class="modal" method="dialog"><h2>Confirmar</h2><p>${esc(message)}</p><div class="row end"><button type="button" class="ghost" data-no>Cancelar</button><button type="button" class="${danger ? "danger" : ""}" data-yes>${esc(okLabel)}</button></div></form>`);
+          let result = false;
+          $("[data-no]", dlg).addEventListener("click", () => dlg.close());
+          $("[data-yes]", dlg).addEventListener("click", () => { result = true; dlg.close(); });
+          dlg.addEventListener("close", () => resolve(result));
+          $("[data-no]", dlg).focus();
+        });
+      }
+      // Pide el PIN de nuevo antes de acciones sensibles.
+      function askPin(reason) {
+        return new Promise((resolve) => {
+          let ok = false;
+          const dlg = openForm({
+            title: "Confirma tu PIN", intro: reason, submit: "Confirmar",
+            fields: [{ name: "pin", label: "PIN", type: "password", maxlength: 64 }],
+            onSubmit: async (v) => {
+              const r = await checkPin(v.pin || "");
+              if (r.ok) { ok = true; return; }
+              return r.wait ? `Demasiados intentos. Espera ${r.wait} s.` : "PIN incorrecto.";
+            }
+          });
+          dlg.addEventListener("close", () => resolve(ok));
+        });
+      }
+
+      /* ---------- Formularios de negocio ---------- */
+      const cuotaOptions = () => S.cuotas.map((c) => ({ value: c.id, label: `${c.nombre} (${clp(c.monto)})` }));
+      const alumnoOptions = () => [...S.alumnos].sort((a, b) => a.nombre.localeCompare(b.nombre, "es")).map((a) => ({ value: a.id, label: a.nombre }));
+
+      function formAlumno(id) {
+        const cur = S.alumnos.find((a) => a.id === id);
+        openForm({
+          title: cur ? "Editar alumno" : "Nuevo alumno",
+          fields: [{ name: "nombre", label: "Nombre completo", value: cur?.nombre, maxlength: 80 }],
+          onSubmit: (v) => {
+            const nombre = str(v.nombre, 80);
+            if (!nombre) return "Escribe un nombre.";
+            if (S.alumnos.some((a) => a.id !== id && a.nombre.toLowerCase() === nombre.toLowerCase())) return "Ya existe un alumno con ese nombre.";
+            if (cur) { logAction(`Alumno renombrado: ${cur.nombre} → ${nombre}`); cur.nombre = nombre; }
+            else { S.alumnos.push({ id: uid(), nombre }); logAction(`Alumno agregado: ${nombre}`); }
+            commit();
+          }
+        });
+      }
+      function formAlumnosMasivo() {
+        openForm({
+          title: "Agregar varios alumnos", submit: "Agregar", intro: "Un nombre por línea. Los repetidos se omiten.",
+          fields: [{ name: "lista", label: "Lista de alumnos", type: "textarea", maxlength: 8000, placeholder: "Ana Pérez\nJuan Soto" }],
+          onSubmit: (v) => {
+            const have = new Set(S.alumnos.map((a) => a.nombre.toLowerCase()));
+            const nuevos = [];
+            for (const n of String(v.lista).split(/\r?\n/).map((x) => str(x, 80)).filter(Boolean)) {
+              if (have.has(n.toLowerCase())) continue;
+              have.add(n.toLowerCase());
+              nuevos.push(n);
+            }
+            if (!nuevos.length) return "No hay nombres nuevos para agregar.";
+            nuevos.forEach((n) => S.alumnos.push({ id: uid(), nombre: n }));
+            logAction(`${nuevos.length} alumnos agregados en bloque`);
+            commit();
+            toast(`${nuevos.length} alumnos agregados`);
+          }
+        });
+      }
+      function formCuota(id) {
+        const cur = S.cuotas.find((c) => c.id === id);
+        openForm({
+          title: cur ? "Editar cuota" : "Nueva cuota",
+          fields: [
+            { name: "nombre", label: "Nombre (ej. Cuota marzo)", value: cur?.nombre, maxlength: 80 },
+            { name: "monto", label: "Monto por alumno ($)", type: "number", value: cur?.monto, min: 1, max: MAX_MONEY },
+            { name: "vencimiento", label: "Vencimiento (opcional)", type: "date", value: cur?.vencimiento }
+          ],
+          onSubmit: (v) => {
+            const nombre = str(v.nombre, 80), monto = int(v.monto);
+            if (!nombre) return "Escribe un nombre.";
+            if (monto < 1) return "El monto debe ser mayor a 0.";
+            const venc = isDate(v.vencimiento) ? v.vencimiento : "";
+            if (cur) { Object.assign(cur, { nombre, monto, vencimiento: venc }); logAction(`Cuota editada: ${nombre}`); }
+            else { S.cuotas.push({ id: uid(), nombre, monto, vencimiento: venc }); logAction(`Cuota creada: ${nombre} (${clp(monto)})`); }
+            commit();
+          }
+        });
+      }
+      function formPago(id, pre = {}) {
+        if (!S.alumnos.length || !S.cuotas.length) { toast("Primero crea al menos un alumno y una cuota."); return; }
+        const cur = S.pagos.find((p) => p.id === id);
+        const first = pre.alumnoId || cur?.alumnoId || alumnoOptions()[0].value;
+        openForm({
+          title: cur ? "Editar pago" : "Registrar pago",
+          fields: [
+            { name: "alumnoId", label: "Alumno", type: "select", options: alumnoOptions(), value: first },
+            { name: "cuotaId", label: "Cuota", type: "select", options: cuotaOptions(), value: pre.cuotaId || cur?.cuotaId },
+            { name: "monto", label: "Monto ($)", type: "number", value: pre.monto ?? cur?.monto, min: 1, max: MAX_MONEY },
+            { name: "fecha", label: "Fecha", type: "date", value: cur?.fecha || today() },
+            { name: "metodo", label: "Método", type: "select", options: METODOS.map((m) => ({ value: m, label: m })), value: cur?.metodo || "Efectivo" },
+            { name: "nota", label: "Nota (opcional)", value: cur?.nota, maxlength: 200 }
+          ],
+          onSubmit: (v) => {
+            const monto = int(v.monto), cuota = cuotaOf(v.cuotaId);
+            if (!S.alumnos.some((a) => a.id === v.alumnoId) || !cuota) return "Alumno o cuota inválidos.";
+            if (monto < 1) return "El monto debe ser mayor a 0.";
+            if (!isDate(v.fecha)) return "Fecha inválida.";
+            const yaPagado = S.pagos.reduce((t, p) => t + (p.id !== id && p.alumnoId === v.alumnoId && p.cuotaId === v.cuotaId ? p.monto : 0), 0);
+            if (yaPagado + monto > cuota.monto) return `Excede lo pendiente de esta cuota (${clp(cuota.monto - yaPagado)}).`;
+            const rec = { alumnoId: v.alumnoId, cuotaId: v.cuotaId, monto, fecha: v.fecha, metodo: METODOS.includes(v.metodo) ? v.metodo : "Otro", nota: str(v.nota, 200) };
+            if (cur) { Object.assign(cur, rec); logAction(`Pago editado: ${alumnoName(rec.alumnoId)} · ${cuota.nombre} · ${clp(monto)}`); }
+            else { S.pagos.push({ id: uid(), ...rec }); logAction(`Pago: ${alumnoName(rec.alumnoId)} · ${cuota.nombre} · ${clp(monto)}`); }
+            commit();
+          }
+        });
+      }
+      function formGasto(id) {
+        const cur = S.gastos.find((g) => g.id === id);
+        openForm({
+          title: cur ? "Editar gasto" : "Registrar gasto",
+          fields: [
+            { name: "descripcion", label: "Descripción", value: cur?.descripcion, maxlength: 120 },
+            { name: "categoria", label: "Categoría", type: "select", options: CATEGORIAS.map((c) => ({ value: c, label: c })), value: cur?.categoria || "Otro" },
+            { name: "monto", label: "Monto ($)", type: "number", value: cur?.monto, min: 1, max: MAX_MONEY },
+            { name: "fecha", label: "Fecha", type: "date", value: cur?.fecha || today() }
+          ],
+          onSubmit: (v) => {
+            const descripcion = str(v.descripcion, 120), monto = int(v.monto);
+            if (!descripcion) return "Escribe una descripción.";
+            if (monto < 1) return "El monto debe ser mayor a 0.";
+            if (!isDate(v.fecha)) return "Fecha inválida.";
+            const rec = { descripcion, monto, fecha: v.fecha, categoria: CATEGORIAS.includes(v.categoria) ? v.categoria : "Otro" };
+            if (monto > saldo() + (cur ? cur.monto : 0) && !cur) toast("⚠️ Este gasto deja el saldo en negativo.");
+            if (cur) { Object.assign(cur, rec); logAction(`Gasto editado: ${descripcion} · ${clp(monto)}`); }
+            else { S.gastos.push({ id: uid(), ...rec }); logAction(`Gasto: ${descripcion} · ${clp(monto)}`); }
+            commit();
+          }
+        });
+      }
+
+      /* ---------- Exportar / importar ---------- */
+      // Neutraliza fórmulas de Excel/Sheets (=, +, -, @) en celdas de texto para evitar inyección de fórmulas.
+      const csvCell = (v) => {
+        let s = String(v ?? "");
+        if (/^[=+\-@\t\r]/.test(s) && !/^-?\d+([.,]\d+)?$/.test(s)) s = "'" + s;
+        return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      };
+      function download(name, content, type) {
+        const url = URL.createObjectURL(new Blob([content], { type }));
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      function exportCsv(name, header, rows) {
+        const csv = "﻿" + [header, ...rows].map((r) => r.map(csvCell).join(";")).join("\r\n");
+        download(`${name}-${S.settings.curso}-${today()}.csv`, csv, "text/csv;charset=utf-8");
+        logAction(`Exportado: ${name}.csv`); save();
+      }
+      const exporters = {
+        pagos: () => exportCsv("pagos", ["Fecha", "Alumno", "Cuota", "Método", "Monto", "Nota"], [...S.pagos].sort((a, b) => a.fecha.localeCompare(b.fecha)).map((p) => [p.fecha, alumnoName(p.alumnoId), cuotaOf(p.cuotaId)?.nombre, p.metodo, p.monto, p.nota])),
+        gastos: () => exportCsv("gastos", ["Fecha", "Descripción", "Categoría", "Monto"], [...S.gastos].sort((a, b) => a.fecha.localeCompare(b.fecha)).map((g) => [g.fecha, g.descripcion, g.categoria, g.monto])),
+        estado: () => exportCsv("estado-alumnos", ["Alumno", "Total cuotas", "Pagado", "Pendiente"], S.alumnos.map((a) => { const s = alumnoStats(a); return [a.nombre, s.total, s.pagado, s.pendiente]; })),
+        pendientes: () => exportCsv("pendientes", ["Alumno", "Cuota", "Vencimiento", "Pendiente", "Atrasada"], pendientes().map((p) => [p.alumno, p.cuota, p.vencimiento, p.monto, p.atrasada ? "Sí" : "No"]))
+      };
+      function backup() {
+        const { auth, ...rest } = S; // el respaldo no incluye el PIN
+        download(`respaldo-tesoreros-${S.settings.curso}-${today()}.json`, JSON.stringify(rest, null, 2), "application/json");
+        logAction("Respaldo descargado"); save();
+      }
+      function importBackup(file) {
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) { toast("Archivo demasiado grande (máx. 2 MB)."); return; }
+        const reader = new FileReader();
+        reader.onload = async () => {
+          let data;
+          try { data = JSON.parse(reader.result); } catch (e) { toast("El archivo no es un respaldo válido."); return; }
+          const clean = sanitize(data, S.auth);
+          const msg = `Se reemplazarán TODOS los datos actuales por el respaldo: ${clean.alumnos.length} alumnos, ${clean.cuotas.length} cuotas, ${clean.pagos.length} pagos, ${clean.gastos.length} gastos.`;
+          if (!(await confirmBox(msg, "Reemplazar datos"))) return;
+          if (!(await askPin("Restaurar un respaldo reemplaza todo lo actual."))) return;
+          S = clean;
+          commit("Respaldo restaurado");
+          toast("Respaldo restaurado ✅");
+        };
+        reader.readAsText(file);
+      }
+
+      /* ---------- Vistas ---------- */
+      const TABS = [["resumen", "Resumen"], ["cuotas", "Cuotas"], ["pagos", "Pagos"], ["gastos", "Gastos"], ["alumnos", "Alumnos"], ["pendientes", "⚠️ Pendientes"], ["reportes", "Reportes"], ["log", "Log"], ["ajustes", "Ajustes"]];
+      const ui = { tab: "resumen", q: "", cuotaId: "" };
+
+      const emptyRow = (cols, msg) => `<tr><td colspan="${cols}" class="empty">${esc(msg)}</td></tr>`;
+      const searchBox = (ph) => `<input id="q" type="search" placeholder="${esc(ph)}" value="${esc(ui.q)}" aria-label="${esc(ph)}" maxlength="80" />`;
+      const cuotaFilter = () => `<select id="cuota-filter" aria-label="Filtrar por cuota"><option value="">Todas las cuotas</option>${S.cuotas.map((c) => `<option value="${esc(c.id)}"${ui.cuotaId === c.id ? " selected" : ""}>${esc(c.nombre)}</option>`).join("")}</select>`;
+      const matches = (text) => !ui.q || text.toLowerCase().includes(ui.q.toLowerCase());
+      const act = (a, id, label, cls = "ghost") => `<button type="button" class="${cls} small" data-a="${a}" data-id="${esc(id)}">${label}</button>`;
+
+      const views = {
+        resumen() {
+          const esp = esperado(), rec = recaudado();
+          const pct = esp ? Math.min(100, Math.round((Math.min(rec, esp) / esp) * 100)) : 0;
+          const pend = pendientes();
+          const alDia = S.alumnos.filter((a) => alumnoStats(a).pendiente === 0).length;
+          const movs = [
+            ...S.pagos.map((p) => ({ fecha: p.fecha, txt: `Pago · ${alumnoName(p.alumnoId)} · ${cuotaOf(p.cuotaId)?.nombre ?? ""}`, monto: p.monto })),
+            ...S.gastos.map((g) => ({ fecha: g.fecha, txt: `Gasto · ${g.descripcion}`, monto: -g.monto }))
+          ].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 6);
+          return `
+            <div class="metrics">
+              <div class="metric ${saldo() < 0 ? "neg" : ""}"><small>Saldo actual</small><strong id="saldo">${clp(saldo())}</strong></div>
+              <div class="metric"><small>Total recaudado</small><strong id="recaudado">${clp(rec)}</strong></div>
+              <div class="metric"><small>Total gastado</small><strong id="gastado">${clp(gastado())}</strong></div>
+              <div class="metric"><small>Por cobrar</small><strong>${clp(pend.reduce((t, p) => t + p.monto, 0))}</strong></div>
+            </div>
+            <section class="card panel">
+              <h2>Avance de recaudación</h2>
+              <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Avance de recaudación"><div style="width:${pct}%"></div></div>
+              <p class="hint">${pct}% de lo esperado (${clp(esp)}) · ${alDia} de ${S.alumnos.length} alumnos al día</p>
+              <div class="row"><button type="button" data-a="new-pago">+ Registrar pago</button><button type="button" class="secondary" data-a="new-gasto">+ Registrar gasto</button></div>
+            </section>
+            <section class="card panel">
+              <h2>Últimos movimientos</h2>
+              <div class="table-wrap"><table><tbody>${movs.length ? movs.map((m) => `<tr><td>${fmtDate(m.fecha)}</td><td>${esc(m.txt)}</td><td class="num ${m.monto < 0 ? "" : "ok"}">${m.monto < 0 ? "−" : "+"}${clp(Math.abs(m.monto))}</td></tr>`).join("") : emptyRow(3, "Aún no hay movimientos. Empieza agregando alumnos y cuotas.")}</tbody></table></div>
+            </section>
+            ${!S.alumnos.length || !S.cuotas.length ? `<section class="card panel"><h2>Primeros pasos</h2><ol><li>Agrega los alumnos (pestaña <b>Alumnos</b>, puedes pegar la lista completa).</li><li>Crea la cuota (pestaña <b>Cuotas</b>).</li><li>Registra los pagos a medida que lleguen.</li><li>Descarga un respaldo en <b>Reportes</b> de vez en cuando.</li></ol></section>` : ""}`;
+        },
+        cuotas() {
+          const n = S.alumnos.length;
+          return `<section class="card panel"><div class="row between"><h2>Cuotas</h2><button type="button" data-a="new-cuota">+ Nueva cuota</button></div>
+            <div class="table-wrap"><table><thead><tr><th>Cuota</th><th>Vence</th><th class="num">Monto</th><th class="num">Recaudado</th><th class="num">Esperado</th><th></th></tr></thead><tbody>
+            ${S.cuotas.length ? S.cuotas.map((c) => { const r = S.pagos.reduce((t, p) => t + (p.cuotaId === c.id ? p.monto : 0), 0); return `<tr><td>${esc(c.nombre)}</td><td>${fmtDate(c.vencimiento)}</td><td class="num">${clp(c.monto)}</td><td class="num">${clp(r)}</td><td class="num">${clp(c.monto * n)}</td><td class="actions">${act("edit-cuota", c.id, "Editar")} ${act("del-cuota", c.id, "Eliminar", "danger")}</td></tr>`; }).join("") : emptyRow(6, "No hay cuotas todavía.")}
+            </tbody></table></div></section>`;
+        },
+        pagos() {
+          const rows = [...S.pagos].sort((a, b) => b.fecha.localeCompare(a.fecha)).filter((p) => matches(alumnoName(p.alumnoId)) && (!ui.cuotaId || p.cuotaId === ui.cuotaId));
+          return `<section class="card panel"><div class="row between"><h2>Pagos</h2><button type="button" data-a="new-pago">+ Registrar pago</button></div>
+            <div class="filters">${searchBox("Buscar por alumno…")}${cuotaFilter()}</div>
+            <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Alumno</th><th>Cuota</th><th>Método</th><th class="num">Monto</th><th></th></tr></thead><tbody>
+            ${rows.length ? rows.map((p) => `<tr><td>${fmtDate(p.fecha)}</td><td>${esc(alumnoName(p.alumnoId))}</td><td>${esc(cuotaOf(p.cuotaId)?.nombre)}</td><td>${esc(p.metodo)}${p.nota ? ` <span class="hint" title="${esc(p.nota)}">📝</span>` : ""}</td><td class="num">${clp(p.monto)}</td><td class="actions">${act("edit-pago", p.id, "Editar")} ${act("del-pago", p.id, "Eliminar", "danger")}</td></tr>`).join("") : emptyRow(6, "Sin pagos para mostrar.")}
+            </tbody><tfoot><tr><td colspan="4">Total mostrado</td><td class="num">${clp(rows.reduce((t, p) => t + p.monto, 0))}</td><td></td></tr></tfoot></table></div></section>`;
+        },
+        gastos() {
+          const rows = [...S.gastos].sort((a, b) => b.fecha.localeCompare(a.fecha)).filter((g) => matches(g.descripcion + " " + g.categoria));
+          return `<section class="card panel"><div class="row between"><h2>Gastos</h2><button type="button" data-a="new-gasto">+ Registrar gasto</button></div>
+            <div class="filters">${searchBox("Buscar por descripción o categoría…")}<span></span></div>
+            <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th class="num">Monto</th><th></th></tr></thead><tbody>
+            ${rows.length ? rows.map((g) => `<tr><td>${fmtDate(g.fecha)}</td><td>${esc(g.descripcion)}</td><td>${esc(g.categoria)}</td><td class="num">${clp(g.monto)}</td><td class="actions">${act("edit-gasto", g.id, "Editar")} ${act("del-gasto", g.id, "Eliminar", "danger")}</td></tr>`).join("") : emptyRow(5, "Sin gastos para mostrar.")}
+            </tbody><tfoot><tr><td colspan="3">Total mostrado</td><td class="num">${clp(rows.reduce((t, g) => t + g.monto, 0))}</td><td></td></tr></tfoot></table></div></section>`;
+        },
+        alumnos() {
+          const rows = [...S.alumnos].sort((a, b) => a.nombre.localeCompare(b.nombre, "es")).filter((a) => matches(a.nombre));
+          return `<section class="card panel"><div class="row between"><h2>Alumnos (${S.alumnos.length})</h2><div class="row"><button type="button" class="secondary" data-a="bulk-alumnos">Agregar varios</button><button type="button" data-a="new-alumno">+ Nuevo alumno</button></div></div>
+            <div class="filters">${searchBox("Buscar alumno…")}<span></span></div>
+            <div class="table-wrap"><table><thead><tr><th>Alumno</th><th class="num">Pagado</th><th class="num">Pendiente</th><th>Estado</th><th></th></tr></thead><tbody>
+            ${rows.length ? rows.map((a) => { const s = alumnoStats(a); const estado = !S.cuotas.length ? "—" : s.pendiente === 0 ? '<span class="pill good">Al día</span>' : '<span class="pill bad">Debe</span>'; return `<tr><td>${esc(a.nombre)}</td><td class="num">${clp(s.pagado)}</td><td class="num">${clp(s.pendiente)}</td><td>${estado}</td><td class="actions">${s.pendiente > 0 ? act("pay-alumno", a.id, "Pagar", "secondary") : ""} ${act("edit-alumno", a.id, "Editar")} ${act("del-alumno", a.id, "Eliminar", "danger")}</td></tr>`; }).join("") : emptyRow(5, "No hay alumnos para mostrar.")}
+            </tbody></table></div></section>`;
+        },
+        pendientes() {
+          const rows = pendientes().filter((p) => matches(p.alumno) && (!ui.cuotaId || p.cuotaId === ui.cuotaId));
+          return `<section class="card panel"><h2>Pendientes de pago</h2>
+            <div class="filters">${searchBox("Buscar por alumno…")}${cuotaFilter()}</div>
+            <div class="table-wrap"><table><thead><tr><th>Alumno</th><th>Cuota</th><th>Vence</th><th class="num">Debe</th><th></th></tr></thead><tbody>
+            ${rows.length ? rows.map((p) => `<tr><td>${esc(p.alumno)}</td><td>${esc(p.cuota)}</td><td>${fmtDate(p.vencimiento)} ${p.atrasada ? '<span class="pill bad">Atrasada</span>' : ""}</td><td class="num">${clp(p.monto)}</td><td class="actions"><button type="button" class="secondary small" data-a="pay-pend" data-al="${esc(p.alumnoId)}" data-cu="${esc(p.cuotaId)}" data-m="${p.monto}">Registrar pago</button> <button type="button" class="ghost small" data-a="copy-msg" data-al="${esc(p.alumnoId)}" data-cu="${esc(p.cuotaId)}">Copiar recordatorio</button></td></tr>`).join("") : emptyRow(5, S.cuotas.length && S.alumnos.length ? "🎉 No hay pagos pendientes." : "Crea alumnos y cuotas para ver pendientes.")}
+            </tbody><tfoot><tr><td colspan="3">Total pendiente</td><td class="num">${clp(rows.reduce((t, p) => t + p.monto, 0))}</td><td></td></tr></tfoot></table></div></section>`;
+        },
+        reportes() {
+          const porCat = CATEGORIAS.map((c) => [c, S.gastos.reduce((t, g) => t + (g.categoria === c ? g.monto : 0), 0)]).filter(([, m]) => m > 0);
+          return `<section class="card panel"><h2>Exportar</h2><p class="hint">Los CSV usan «;» como separador y abren directo en Excel.</p>
+            <div class="row"><button type="button" class="secondary" data-a="exp-pagos">Pagos (CSV)</button><button type="button" class="secondary" data-a="exp-gastos">Gastos (CSV)</button><button type="button" class="secondary" data-a="exp-estado">Estado por alumno (CSV)</button><button type="button" class="secondary" data-a="exp-pendientes">Pendientes (CSV)</button><button type="button" class="ghost" data-a="print">Imprimir</button></div></section>
+            <section class="card panel"><h2>Gastos por categoría</h2><div class="table-wrap"><table><tbody>${porCat.length ? porCat.map(([c, m]) => `<tr><td>${esc(c)}</td><td class="num">${clp(m)}</td></tr>`).join("") : emptyRow(2, "Sin gastos registrados.")}</tbody></table></div></section>
+            <section class="card panel"><h2>Respaldo</h2><p class="hint">Los datos viven solo en este navegador. Si borras los datos del sitio o cambias de equipo, se pierden: descarga un respaldo con frecuencia. El respaldo no incluye el PIN.</p>
+            <div class="row"><button type="button" data-a="backup">Descargar respaldo (JSON)</button><button type="button" class="ghost" data-a="restore">Restaurar respaldo…</button><input id="restore-file" type="file" accept="application/json,.json" class="hidden" /></div></section>`;
+        },
+        log() {
+          return `<section class="card panel"><h2>Registro de actividad</h2><p class="hint">Últimas ${S.log.length} acciones (máx. 500). Queda solo en este dispositivo.</p>
+            <div class="table-wrap"><table><thead><tr><th>Fecha y hora</th><th>Acción</th></tr></thead><tbody>${S.log.length ? S.log.map((l) => `<tr><td style="white-space:nowrap">${esc(l.ts)}</td><td>${esc(l.msg)}</td></tr>`).join("") : emptyRow(2, "Sin actividad.")}</tbody></table></div></section>`;
+        },
+        ajustes() {
+          const s = S.settings;
+          return `<section class="card panel"><h2>Ajustes generales</h2>
+            <form id="settings-form" novalidate>
+              <div class="field"><label for="title">Título de la app</label><input id="title" maxlength="60" value="${esc(s.title)}" /></div>
+              <div class="field"><label for="school">Colegio</label><input id="school" maxlength="80" value="${esc(s.school)}" /></div>
+              <div class="field"><label for="delegates">Texto delegados</label><input id="delegates" maxlength="60" value="${esc(s.delegates)}" /></div>
+              <div class="field"><label for="curso-input">Curso</label><input id="curso-input" maxlength="20" value="${esc(s.curso)}" /></div>
+              <div class="field"><label for="saldo-inicial">Saldo inicial ($)</label><input id="saldo-inicial" type="number" step="1" value="${s.saldoInicial}" /><span class="hint" style="margin:0">Dinero que ya había en caja antes de usar la app. El saldo actual = saldo inicial + recaudado − gastado.</span></div>
+              <button type="submit">Guardar cambios</button>
+            </form></section>
+            <section class="card panel"><h2>Cambiar PIN</h2>
+            <form id="pin-form" novalidate autocomplete="off">
+              <div class="field"><label for="pin-old">PIN actual</label><input id="pin-old" type="password" maxlength="64" autocomplete="current-password" /></div>
+              <div class="field"><label for="pin-new">Nuevo PIN (mín. 6 caracteres)</label><input id="pin-new" type="password" maxlength="64" autocomplete="new-password" /></div>
+              <div class="field"><label for="pin-new2">Repite el nuevo PIN</label><input id="pin-new2" type="password" maxlength="64" autocomplete="new-password" /></div>
+              <p id="pin-form-error" class="err hidden" role="alert"></p>
+              <button type="submit" class="secondary">Cambiar PIN</button>
+            </form></section>
+            <section class="card panel"><h2>Zona de peligro</h2><p class="hint">Borra alumnos, cuotas, pagos, gastos y registro. Descarga un respaldo antes.</p>
+            <button type="button" class="danger" data-a="wipe">Borrar todos los datos</button></section>`;
+        }
+      };
+
+      /* ---------- Render ---------- */
+      function render() {
+        $("#login-title").textContent = S.settings.title;
+        $("#login-school").textContent = S.settings.school;
+        $("#app-title").textContent = S.settings.title;
+        $("#app-school").textContent = S.settings.school;
+        $("#curso").textContent = S.settings.curso;
+        $("#delegates-badge").textContent = S.settings.delegates;
+        document.title = `${S.settings.title} · ${S.settings.curso}`;
+        if ($("#dashboard").classList.contains("hidden")) return;
+        const nPend = new Set(pendientes().map((p) => p.alumnoId)).size;
+        $("#tabs").innerHTML = TABS.map(([id, label]) => `<button type="button" role="tab" class="tab" id="tab-${id}" data-tab="${id}" aria-selected="${ui.tab === id}" aria-controls="view">${esc(label)}${id === "pendientes" && nPend ? `<span class="count">${nPend}</span>` : ""}</button>`).join("");
+        $("#view").innerHTML = views[ui.tab]();
+        $("#view").setAttribute("aria-labelledby", "tab-" + ui.tab);
+      }
+      function go(tab, push = true) {
+        if (!views[tab]) tab = "resumen";
+        if (tab !== ui.tab) { ui.q = ""; ui.cuotaId = ""; }
+        ui.tab = tab;
+        if (push && location.hash !== "#" + tab) history.pushState(null, "", "#" + tab);
+        render();
+      }
+      window.addEventListener("popstate", () => { if (!$("#dashboard").classList.contains("hidden")) go(location.hash.slice(1), false); });
+
+      /* ---------- Eventos ---------- */
+      $("#tabs").addEventListener("click", (e) => { const t = e.target.closest("[data-tab]"); if (t) go(t.dataset.tab); });
+      $("#tabs").addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+        const ids = TABS.map((t) => t[0]);
+        const next = ids[(ids.indexOf(ui.tab) + (e.key === "ArrowRight" ? 1 : -1) + ids.length) % ids.length];
+        go(next);
+        $("#tab-" + next)?.focus();
+      });
+
+      const actions = {
+        "new-pago": () => formPago(),
+        "new-gasto": () => formGasto(),
+        "new-cuota": () => formCuota(),
+        "new-alumno": () => formAlumno(),
+        "bulk-alumnos": () => formAlumnosMasivo(),
+        "edit-alumno": (b) => formAlumno(b.dataset.id),
+        "edit-cuota": (b) => formCuota(b.dataset.id),
+        "edit-pago": (b) => formPago(b.dataset.id),
+        "edit-gasto": (b) => formGasto(b.dataset.id),
+        "pay-alumno": (b) => {
+          const p = pendientes().find((x) => x.alumnoId === b.dataset.id);
+          formPago(null, p ? { alumnoId: p.alumnoId, cuotaId: p.cuotaId, monto: p.monto } : { alumnoId: b.dataset.id });
+        },
+        "pay-pend": (b) => formPago(null, { alumnoId: b.dataset.al, cuotaId: b.dataset.cu, monto: Number(b.dataset.m) }),
+        "copy-msg": async (b) => {
+          const p = pendientes().find((x) => x.alumnoId === b.dataset.al && x.cuotaId === b.dataset.cu);
+          if (!p) return;
+          const msg = `Hola, te recordamos que la cuota "${p.cuota}" de ${p.alumno} está pendiente por ${clp(p.monto)}${p.vencimiento ? ` (vence el ${fmtDate(p.vencimiento)})` : ""}. ¡Gracias! — Tesorería ${S.settings.curso}`;
+          try { await navigator.clipboard.writeText(msg); toast("Recordatorio copiado 📋"); } catch (e) { toast("No se pudo copiar automáticamente."); }
+        },
+        "del-alumno": async (b) => {
+          const a = S.alumnos.find((x) => x.id === b.dataset.id); if (!a) return;
+          const n = S.pagos.filter((p) => p.alumnoId === a.id).length;
+          if (!(await confirmBox(`¿Eliminar a ${a.nombre}?${n ? ` También se eliminarán sus ${n} pagos (${clp(S.pagos.reduce((t, p) => t + (p.alumnoId === a.id ? p.monto : 0), 0))}).` : ""}`, "Eliminar"))) return;
+          S.alumnos = S.alumnos.filter((x) => x.id !== a.id); S.pagos = S.pagos.filter((p) => p.alumnoId !== a.id);
+          commit(`Alumno eliminado: ${a.nombre} (${n} pagos)`);
+        },
+        "del-cuota": async (b) => {
+          const c = cuotaOf(b.dataset.id); if (!c) return;
+          const n = S.pagos.filter((p) => p.cuotaId === c.id).length;
+          if (!(await confirmBox(`¿Eliminar la cuota "${c.nombre}"?${n ? ` También se eliminarán ${n} pagos asociados.` : ""}`, "Eliminar"))) return;
+          S.cuotas = S.cuotas.filter((x) => x.id !== c.id); S.pagos = S.pagos.filter((p) => p.cuotaId !== c.id);
+          commit(`Cuota eliminada: ${c.nombre} (${n} pagos)`);
+        },
+        "del-pago": async (b) => {
+          const p = S.pagos.find((x) => x.id === b.dataset.id); if (!p) return;
+          if (!(await confirmBox(`¿Eliminar el pago de ${alumnoName(p.alumnoId)} por ${clp(p.monto)}?`, "Eliminar"))) return;
+          S.pagos = S.pagos.filter((x) => x.id !== p.id);
+          commit(`Pago eliminado: ${alumnoName(p.alumnoId)} · ${clp(p.monto)}`);
+        },
+        "del-gasto": async (b) => {
+          const g = S.gastos.find((x) => x.id === b.dataset.id); if (!g) return;
+          if (!(await confirmBox(`¿Eliminar el gasto "${g.descripcion}" por ${clp(g.monto)}?`, "Eliminar"))) return;
+          S.gastos = S.gastos.filter((x) => x.id !== g.id);
+          commit(`Gasto eliminado: ${g.descripcion} · ${clp(g.monto)}`);
+        },
+        "exp-pagos": () => exporters.pagos(),
+        "exp-gastos": () => exporters.gastos(),
+        "exp-estado": () => exporters.estado(),
+        "exp-pendientes": () => exporters.pendientes(),
+        print: () => window.print(),
+        backup: () => backup(),
+        restore: () => $("#restore-file").click(),
+        wipe: async () => {
+          if (!(await confirmBox("Se borrarán TODOS los alumnos, cuotas, pagos, gastos y el registro. Esta acción no se puede deshacer.", "Borrar todo"))) return;
+          if (!(await askPin("Confirma para borrar todos los datos."))) return;
+          const keep = { settings: S.settings, auth: S.auth };
+          S = { ...defaults(), ...keep };
+          commit("Todos los datos fueron borrados");
+          toast("Datos borrados");
+        }
+      };
+      $("#view").addEventListener("click", (e) => { const b = e.target.closest("[data-a]"); if (b && actions[b.dataset.a]) actions[b.dataset.a](b); });
+      $("#view").addEventListener("change", (e) => {
+        if (e.target.id === "cuota-filter") { ui.cuotaId = e.target.value; render(); }
+        if (e.target.id === "restore-file") { importBackup(e.target.files[0]); e.target.value = ""; }
+      });
+      $("#view").addEventListener("input", (e) => {
+        if (e.target.id !== "q") return;
+        const pos = e.target.selectionStart;
+        ui.q = e.target.value;
+        render();
+        const q = $("#q"); q.focus(); q.setSelectionRange(pos, pos);
+      });
+      $("#view").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (e.target.id === "settings-form") {
+          const s = S.settings;
+          s.title = str($("#title").value, 60) || "Tesoreros SG";
+          s.school = str($("#school").value, 80) || "Saint George's College";
+          s.delegates = str($("#delegates").value, 60) || "Delegados Público";
+          s.curso = (str($("#curso-input").value, 20) || "4B").toUpperCase();
+          s.saldoInicial = int($("#saldo-inicial").value);
+          commit("Ajustes actualizados");
+          toast("Cambios guardados ✅");
+        }
+        if (e.target.id === "pin-form") {
+          const err = $("#pin-form-error");
+          const fail = (m) => { err.textContent = m; err.classList.remove("hidden"); };
+          const nuevo = $("#pin-new").value;
+          if (nuevo !== $("#pin-new2").value) return fail("Los PIN nuevos no coinciden.");
+          const policy = pinPolicy(nuevo);
+          if (policy) return fail(policy);
+          const r = await checkPin($("#pin-old").value);
+          if (!r.ok) return fail(r.wait ? `Demasiados intentos. Espera ${r.wait} s.` : "El PIN actual es incorrecto.");
+          S.auth = await makeAuth(nuevo);
+          commit("PIN cambiado");
+          toast("PIN actualizado ✅");
         }
       });
 
-      document.getElementById("logout-btn").addEventListener("click", () => {
-        document.getElementById("pin").value = "";
-        dashboard.classList.add("hidden");
-        login.classList.remove("hidden");
-      });
+      /* ---------- Acceso ---------- */
+      let authed = false, idleTimer;
+      function showOnly(id) { ["setup", "login", "dashboard"].forEach((s) => $("#" + s).classList.toggle("hidden", s !== id)); }
+      function enter() {
+        authed = true;
+        showOnly("dashboard");
+        go(location.hash.slice(1) || "resumen", false);
+        resetIdle();
+      }
+      function logout(msg) {
+        authed = false;
+        clearTimeout(idleTimer);
+        document.querySelectorAll("dialog").forEach((d) => d.close());
+        $("#pin").value = "";
+        showOnly("login");
+        updateLockUi();
+        if (msg) toast(msg);
+      }
+      function resetIdle() { clearTimeout(idleTimer); if (authed) idleTimer = setTimeout(() => logout("Sesión cerrada por inactividad"), IDLE_MS); }
+      ["click", "keydown", "touchstart"].forEach((ev) => document.addEventListener(ev, resetIdle, { passive: true }));
 
-      document.getElementById("settings-form").addEventListener("submit", (e) => {
+      let lockTimer;
+      function updateLockUi() {
+        clearInterval(lockTimer);
+        const btn = $("#login-btn"), err = $("#pin-error");
+        const tick = () => {
+          const w = lockRemaining();
+          btn.disabled = w > 0;
+          if (w > 0) { err.textContent = `Demasiados intentos. Intenta de nuevo en ${w} s.`; err.classList.remove("hidden"); }
+          else if (err.dataset.lock) { err.classList.add("hidden"); delete err.dataset.lock; clearInterval(lockTimer); }
+        };
+        if (lockRemaining() > 0) { err.dataset.lock = "1"; tick(); lockTimer = setInterval(tick, 1000); } else tick();
+      }
+
+      $("#login-form").addEventListener("submit", async (e) => {
         e.preventDefault();
-        config.title = document.getElementById("title").value.trim() || defaultConfig.title;
-        config.school = document.getElementById("school").value.trim() || defaultConfig.school;
-        config.delegates = document.getElementById("delegates").value.trim() || defaultConfig.delegates;
-        config.curso = (document.getElementById("curso-input").value.trim() || defaultConfig.curso).toUpperCase();
-        config.saldo = Number(document.getElementById("saldo-input").value || 0);
-        config.recaudado = Number(document.getElementById("recaudado-input").value || 0);
-        config.gastado = Number(document.getElementById("gastado-input").value || 0);
+        const err = $("#pin-error");
+        const r = await checkPin($("#pin").value);
+        if (r.ok) { err.classList.add("hidden"); $("#pin").value = ""; enter(); return; }
+        $("#pin").value = "";
+        if (r.wait) { updateLockUi(); return; }
+        err.textContent = "PIN incorrecto"; err.classList.remove("hidden");
+        $("#pin").focus();
+      });
+      $("#pin-toggle").addEventListener("click", () => { const i = $("#pin"); const show = i.type === "password"; i.type = show ? "text" : "password"; $("#pin-toggle").textContent = show ? "Ocultar" : "Ver"; });
+      $("#logout-btn").addEventListener("click", () => logout());
 
-        localStorage.setItem("tesoreros-config", JSON.stringify(config));
-        render();
-
-        const saved = document.getElementById("saved");
-        saved.classList.remove("hidden");
-        setTimeout(() => saved.classList.add("hidden"), 1400);
+      $("#setup-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const err = $("#setup-error");
+        const fail = (m) => { err.textContent = m; err.classList.remove("hidden"); };
+        const p1 = $("#setup-pin").value;
+        if (p1 !== $("#setup-pin2").value) return fail("Los PIN no coinciden.");
+        const policy = pinPolicy(p1);
+        if (policy) return fail(policy);
+        S.auth = await makeAuth(p1);
+        logAction("PIN creado");
+        save();
+        $("#setup-pin").value = $("#setup-pin2").value = "";
+        enter();
       });
 
-      document.getElementById("reset-btn").addEventListener("click", () => {
-        localStorage.removeItem("tesoreros-config");
-        Object.assign(config, defaultConfig);
-        if (params.get("curso")) config.curso = params.get("curso").toUpperCase();
+      // Si otra pestaña modifica los datos, se recargan para no pisarlos.
+      window.addEventListener("storage", (e) => {
+        if (e.key !== KEY) return;
+        S = load();
+        if (!authed) { if (S.auth) showOnly("login"); }
         render();
       });
+
+      /* ---------- Inicio ---------- */
+      if (!window.crypto || !crypto.subtle) {
+        document.querySelector(".wrap").innerHTML = '<section class="card login"><h1>Conexión no segura</h1><p class="subtitle">Esta app necesita abrirse por HTTPS (o como archivo local) para proteger el PIN.</p></section>';
+      } else {
+        render();
+        if (S.auth) { showOnly("login"); updateLockUi(); $("#pin").focus(); } else { showOnly("setup"); $("#setup-pin").focus(); }
+      }
     </script>
   </body>
 </html>
